@@ -1,4 +1,5 @@
 public class Movie {
+    // attributes
     private int id;
     private String title;
     private String genre;
@@ -12,6 +13,7 @@ public class Movie {
     private String mppa;
     private String showtimes;
 
+    // constructor
     public Movie(int id, String title, String genre, String cast, String director,
                  String producer, String synopsis, String reviews, String picture,
                  String video, String mppa, String showtimes) {
