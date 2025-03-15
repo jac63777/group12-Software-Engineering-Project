@@ -76,16 +76,22 @@ backend/
 │   │   ├── java/com/example/movieapp/
 │   │   │   ├── controller/      (Handles API requests)
 │   │   │   │   ├── MovieController.java  
+│   │   │   │   ├── ReviewController.java  
 │   │   │   ├── service/         (Contains business logic)
 │   │   │   │   ├── MovieService.java  
+│   │   │   │   ├── ReviewService.java  
 │   │   │   ├── repository/      (Handles database queries)
 │   │   │   │   ├── MovieRepository.java  
-│   │   │   ├── model/           (Defines Movie object)
+│   │   │   │   ├── ReviewRepository.java  
+│   │   │   ├── model/           (Defines entity models)
 │   │   │   │   ├── Movie.java  
+│   │   │   │   ├── Review.java  
+│   │   │   │   ├── MPAARating.java  (Enum for ratings)
 │   │   │   ├── MovieappApplication.java    (Main entry point)
 │   │   ├── resources/
 │   │   │   ├── application.properties      (Database & Spring settings)
 │── pom.xml                                  (Project dependencies)
+
 
 ---
 
@@ -93,10 +99,16 @@ backend/
 | Layer       | File                      | Purpose                        |
 |-------------|---------------------------|--------------------------------|
 | Main        | MovieappApplication.java  | Starts the app                 |
-| Controller  | MovieController.java      | Handles API requests           |
-| Service     | MovieService.java         | Business logic                 |
-| Repository  | MovieRepository.java      | Database access                |
+| Controller  | MovieController.java      | Handles API requests for movies |
+| Controller  | ReviewController.java     | Handles API requests for reviews |
+| Service     | MovieService.java         | Business logic for movies       |
+| Service     | ReviewService.java        | Business logic for reviews      |
+| Repository  | MovieRepository.java      | Database access for movies      |
+| Repository  | ReviewRepository.java     | Database access for reviews     |
 | Model       | Movie.java                | Defines Movie object           |
+| Model       | Review.java               | Defines Review object          |
+| Model       | MPAARating.java           | Enum for MPAA ratings          |
+
 
 Spring Boot automatically scans these components and connects them.
 
@@ -107,51 +119,54 @@ Base URL: `http://localhost:8080`
 
 This backend provides REST API endpoints to interact with movies.
 
-| Method     | Endpoint         | Request Body (if needed)| Description                |
-|------------|------------------|-------------------------|----------------------------|
-| **GET**    | `/`              | None                    | Returns a welcome message  |
-| **GET**    | `/movies`        | None                    | Fetches all movies         |
-| **GET**    | `/movies/{title}`| None                    | Fetches a specific movie   |
-| **POST**   | `/movies/add`    | `{ "title": "Movie", "year": 2024 }` | Adds a new movie  |
-| **DELETE** | `/movies/{title}`| None                    | Deletes a movie            |
+| Method     | Endpoint                              | Request Body (if needed)                                     | Description                             |
+|------------|---------------------------------------|--------------------------------------------------------------|-----------------------------------------|
+| **GET**    | `/api/movies`                         | None                                                         | Fetches all movies                      |
+| **GET**    | `/api/movies/{id}`                    | None                                                         | Fetches a specific movie by ID          |
+| **GET**    | `/api/movies/search/title/{title}`    | None                                                         | Fetches movies by title                 |
+| **GET**    | `/api/movies/search/genre/{genre}`    | None                                                         | Fetches movies by genre                 |
+| **GET**    | `/api/movies/search/cast/{cast}`      | None                                                         | Fetches movies by cast member           |
+| **GET**    | `/api/movies/search/director/{director}` | None                                                      | Fetches movies by director              |
+| **GET**    | `/api/movies/search/producer/{producer}` | None                                                      | Fetches movies by producer              |
+| **GET**    | `/api/movies/search/rating/{mpaa}`    | None                                                         | Fetches movies by MPAA rating           |
+| **GET**    | `/api/movies/search`                  | Query params: `?title=Inception&genre=Action&mpaa=PG-13`     | Flexible search by any combination      |
+| **POST**   | `/api/movies`                         | `{ "title": "Movie", "genre": "Action", "year": 2024 }`      | Adds a new movie                        |
+| **PUT**    | `/api/movies/{id}`                    | `{ "title": "Updated Title", "genre": "Comedy" }`            | Updates an existing movie               |
+| **DELETE** | `/api/movies/{id}`                    | None                                                         | Deletes a movie                         |
+| **GET**    | `/api/movies/{id}/reviews`            | None                                                         | Fetches all reviews for a movie by ID   |
+| **GET**    | `/api/movies/search/reviews`          | Query params: `?title=Inception``                            | Fetches all reviews for a movie by title|
+| **GET**    | `/api/movies/search/producers`        | None                                                         | Fetches all unique producers            |
+
+NOTE, you may search by any combination of MPAA Rating, Title, Genre, Director, Cast. Useful for querying based on multiple parameters.
 
 ---
 
 ## Example API Calls
 
-Note, of course, that the endpoints can always be checked for what they return by putting them into the browser, which will return a page of the JSON or whatever response.
-
-### Fetch Welcome Message
-**Request**
-GET http://localhost:8080/
+Note, of course, that the endpoints can always be checked for what they return by putting them into the browser, 
+which will return a page of the JSON or whatever response.
 
 **Response**
 {"message":"Welcome to the Movie API!"}
 
 ### Fetch All Movies
 **Request**
-GET http://localhost:8080/movies
+GET http://localhost:8080/api/movies
 **Response**
 [ { "title": "Inception", "year": 2010 }, { "title": "Interstellar", "year": 2014 } ] (an array of movies all with the same structure)
 
 ### Fetch a Movie by Title
-GET http://localhost:8080/movies/Inception
+GET http://localhost:8080/api/movies/title/Inception or GET http://localhost:8080/api/movies/search?title=Inception
 **Response**
 { "title": "Inception", "year": 2010 }
 
 ### Add a New Movie
 **Request**
-POST http://localhost:8080/movies/add Content-Type: application/json
+POST http://localhost:8080/api/movies Content-Type: application/json
 **Body**
 { "title": "The Matrix", "year": 1999 }
 **Response**
 { "title": "The Matrix", "year": 1999 }
-
-### Delete a Movie by Title
-**Request**
-DELETE http://localhost:8080/movies/Inception
-**Response**
-_(No content, HTTP 204 if successful)_
 
 ---
 
@@ -170,17 +185,18 @@ Run frontend manually:
 npm install (only once)
 npm run dev
 
-(note if you are using my version of the scripts, I am emulating a Linux terminal on a Windows machine. That means in some cases I have to use Linux commands that emulate Windows commands (I know), so you may have to configure the scripts slightly for use on an actual Linux machine or for MacOS. If that is the case, please create separate scripts if you must and call them start/stop_project_mac.sh that way when we continue sharing in the future, both options are always there!)
-
- Available API Calls:
-- `GET /movies`
-- `GET /movies/{title}`
-- `POST /movies/add`
-- `DELETE /movies/{title}`
+(note if you are using my version of the scripts, I am emulating a Linux terminal on a Windows machine. That means in some cases 
+	I have to use Linux commands that emulate Windows commands (I know), so you may have to configure the scripts slightly for use 
+	on an actual Linux machine or for MacOS. If that is the case, please create separate scripts if you must and call them start/stop_project_mac.sh 
+	that way when we continue sharing in the future, both options are always there!)
 
 ---
 
-Given that the project was refactored in Linux terminal and not IntelliJ, I am no longer using JDBC/ConnecterJ. That means you no longer need these and instead all dependencies are handled by Maven, which automatically factors in dependencies (in pom.xml) and builds/compiles the project freshly each time using mvn clean install. For SpringBoot, no installations are necessary. However, you will have to install Apache Maven to run the backend. Unfortunately this is the easiest way for a big backend project like this, but installation is quick and easy.
+Given that the project was refactored in Linux terminal and not IntelliJ, I am no longer using JDBC/ConnecterJ. 
+That means you no longer need these and instead all dependencies are handled by Maven, which automatically factors in dependencies (in pom.xml) 
+and builds/compiles the project freshly each time using mvn clean install. For SpringBoot, no installations are necessary. 
+However, you will have to install Apache Maven to run the backend. Unfortunately this is the easiest way for a big backend project like this, 
+but installation is quick and easy.
 
 Just download Maven from the official Apache Maven site.
 
