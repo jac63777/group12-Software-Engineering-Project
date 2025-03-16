@@ -22,6 +22,7 @@ public class Movie {
     private String picture;
     private String video;
 
+    @Column(name = "mpaa")
     @Enumerated(EnumType.STRING)
     private MPAARating mpaa;  // Changed to Enum
 

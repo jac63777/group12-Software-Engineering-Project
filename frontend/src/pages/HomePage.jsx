@@ -25,9 +25,14 @@ const HomePage = () => {
 
     const fetchItems = async () => {
         try {
+            console.log(`Endpoint: ${import.meta.env.VITE_REACT_APP_API_URL}/api/movies`)
             const response = await fetch(`${import.meta.env.VITE_REACT_APP_API_URL}/api/movies`);
             const data = await response.json();
-            setMoviesDataApi(data);
+            const updatedMovies = data.map((movie, index) => ({
+                ...movie,
+                runningStatus: index < 7 ? "Currently Running" : "Coming Soon"
+            }));
+            setMoviesDataApi(updatedMovies);
         } catch (e) {
             console.error(e.message);
         }
@@ -36,9 +41,10 @@ const HomePage = () => {
     console.log(moviesDataApi);
     const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredMovies = moviesDataApi.filter((movie) =>
-    movie.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    const filteredMovies = moviesDataApi.length > 0
+      ? moviesDataApi.filter((movie) =>
+          movie.title.toLowerCase().includes(searchTerm.toLowerCase())
+      ) : [];
 
   return (
     <div className="home-container">

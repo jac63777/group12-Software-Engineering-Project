@@ -13,12 +13,15 @@ You can run the project in **two ways**:
 
 ## Running the Project with Scripts
 To **start** the project (backend + frontend in separate terminals):
+>[!WARNING]
+> Scripts ONLY works for WINDOWS systems, start the backend and frontend manually for other systems.
 ```sh
 ./start_project.sh
-
+```
 To **stop** the Project
 ```sh
 ./stop_project.sh
+```
 
 ---
 
@@ -38,13 +41,13 @@ To **stop** the Project
 If you want to start the backend without using the script:
 
 1. Navigate to the Backend Directory:
-cd path/backend
+`cd path/backend`
 
 2. Build the backend (Compile & Package):
-mvn clean install
+`mvn clean install`
 
 3. Run the Spring Boot Application:
-java -jar target/movieapp-0.0.1-SNAPSHOT.jar
+`java -jar target/movieapp-0.0.1-SNAPSHOT.jar`
 (note that target/movieapp might be slightly different when you run it, but will be named similarly)
 
 After running this, the backend will be available at `http://localhost:8080`.
@@ -55,13 +58,13 @@ After running this, the backend will be available at `http://localhost:8080`.
 If you want to start the frontend without using the script:
 
 1. Navigate to the Frontend Directory:
-cd path/frontend
+`cd path/frontend`
 
 2. Install Dependencies (only needed the first time):
-npm install
+`npm install`
 
 3. Start the Frontend:
-npm run dev
+`npm run dev`
 
 This will run the frontend at `http://localhost:5173/`.
 
@@ -70,6 +73,7 @@ This will run the frontend at `http://localhost:5173/`.
 # Backend Structure
 The Spring Boot backend follows a layered architecture:
 
+```
 backend/
 │── src/
 │   ├── main/
@@ -91,7 +95,7 @@ backend/
 │   │   ├── resources/
 │   │   │   ├── application.properties      (Database & Spring settings)
 │── pom.xml                                  (Project dependencies)
-
+```
 
 ---
 
@@ -152,19 +156,23 @@ which will return a page of the JSON or whatever response.
 ### Fetch All Movies
 **Request**
 GET http://localhost:8080/api/movies
+
 **Response**
 [ { "title": "Inception", "year": 2010 }, { "title": "Interstellar", "year": 2014 } ] (an array of movies all with the same structure)
 
 ### Fetch a Movie by Title
-GET http://localhost:8080/api/movies/title/Inception or GET http://localhost:8080/api/movies/search?title=Inception
+GET http://localhost:8080/api/movies/title/Inception <br>
+or GET http://localhost:8080/api/movies/search?title=Inception
+
 **Response**
 { "title": "Inception", "year": 2010 }
 
 ### Add a New Movie
 **Request**
-POST http://localhost:8080/api/movies Content-Type: application/json
+POST http://localhost:8080/api/movies Content-Type: application/json <br>
 **Body**
 { "title": "The Matrix", "year": 1999 }
+
 **Response**
 { "title": "The Matrix", "year": 1999 }
 
