@@ -77,15 +77,19 @@ backend/
 │   │   │   ├── controller/      (Handles API requests)
 │   │   │   │   ├── MovieController.java  
 │   │   │   │   ├── ReviewController.java  
+│   │   │   │   ├── AddressController.java  
 │   │   │   ├── service/         (Contains business logic)
 │   │   │   │   ├── MovieService.java  
 │   │   │   │   ├── ReviewService.java  
+│   │   │   │   ├── AddressService.java  
 │   │   │   ├── repository/      (Handles database queries)
 │   │   │   │   ├── MovieRepository.java  
 │   │   │   │   ├── ReviewRepository.java  
+│   │   │   │   ├── AddressRepository.java  
 │   │   │   ├── model/           (Defines entity models)
 │   │   │   │   ├── Movie.java  
 │   │   │   │   ├── Review.java  
+│   │   │   │   ├── Address.java  
 │   │   │   │   ├── MPAARating.java  (Enum for ratings)
 │   │   │   ├── MovieappApplication.java    (Main entry point)
 │   │   ├── resources/
@@ -93,21 +97,27 @@ backend/
 │── pom.xml                                  (Project dependencies)
 
 
+
 ---
 
 ## Backend Explanation
-| Layer       | File                      | Purpose                        |
-|-------------|---------------------------|--------------------------------|
-| Main        | MovieappApplication.java  | Starts the app                 |
+| Layer       | File                      | Purpose                         |
+|-------------|---------------------------|---------------------------------|
+| Main        | MovieappApplication.java  | Starts the app                  |
 | Controller  | MovieController.java      | Handles API requests for movies |
 | Controller  | ReviewController.java     | Handles API requests for reviews |
+| Controller  | AddressController.java    | Handles API requests for addresses |
 | Service     | MovieService.java         | Business logic for movies       |
 | Service     | ReviewService.java        | Business logic for reviews      |
+| Service     | AddressService.java       | Business logic for addresses    |
 | Repository  | MovieRepository.java      | Database access for movies      |
 | Repository  | ReviewRepository.java     | Database access for reviews     |
-| Model       | Movie.java                | Defines Movie object           |
-| Model       | Review.java               | Defines Review object          |
-| Model       | MPAARating.java           | Enum for MPAA ratings          |
+| Repository  | AddressRepository.java    | Database access for addresses   |
+| Model       | Movie.java                | Defines Movie object            |
+| Model       | Review.java               | Defines Review object           |
+| Model       | Address.java              | Defines Address object          |
+| Model       | MPAARating.java           | Enum for MPAA ratings           |
+
 
 
 Spring Boot automatically scans these components and connects them.
@@ -135,7 +145,10 @@ This backend provides REST API endpoints to interact with movies.
 | **DELETE** | `/api/movies/{id}`                    | None                                                         | Deletes a movie                         |
 | **GET**    | `/api/movies/{id}/reviews`            | None                                                         | Fetches all reviews for a movie by ID   |
 | **GET**    | `/api/movies/search/reviews`          | Query params: `?title=Inception``                            | Fetches all reviews for a movie by title|
+| **POST**   | `/api/reviews/addById/{id}`           | `{ "reviewerName": "John", "rating": 5, "comment": "Great movie!" }` | Adds a review for a movie by ID |
+| **POST**   | `/api/reviews/addByTitle/{title}`     | `{ "reviewerName": "John", "rating": 5, "comment": "Great movie!" }` | Adds a review for a movie by title |
 | **GET**    | `/api/movies/search/producers`        | None                                                         | Fetches all unique producers            |
+| **GET**    | `/api/addresses`                      | None                                                         | Fetches all addresses                   |
 
 NOTE, you may search by any combination of MPAA Rating, Title, Genre, Director, Cast. Useful for querying based on multiple parameters.
 
