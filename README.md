@@ -167,8 +167,8 @@ Base URL: `http://localhost:8080`
 | **GET**    | `/api/movies/search/producer/{producer}` | None                                                      | Fetches movies by producer              |
 | **GET**    | `/api/movies/search/rating/{mpaa}`    | None                                                         | Fetches movies by MPAA rating           |
 | **GET**    | `/api/movies/search`                  | Query params: `?title=Inception&genre=Action&mpaa=PG-13`     | Flexible search by any combination      |
-| **POST**   | `/api/movies`                         | `{ "title": "Movie", "genre": "Action", "year": 2024 }`      | Adds a new movie                        |
-| **PUT**    | `/api/movies/{id}`                    | `{ "title": "Updated Title", "genre": "Comedy" }`            | Updates an existing movie               |
+| **POST**   | `/api/movies`                         | `{ "title": "Movie", "genre": "Action Epic", "cast": "Actor Names", "director": "Director Names", "producer": "Producer Names", "synopsis": "Brief description of the movie", "picture": "image_path", "video": "youtube link", "mpaa": "PG-13" }`      | Adds a new movie                        |
+| **PUT**    | `/api/movies/{id}`                    | `{ "title": "Updated Movie Title", "genre": "Comedy", "cast": "New Actor Names", "director": "New Directors", "producer": "New Producers", "synopsis": "Updated description", "picture": "image_path", "video": "updated_trailer.mp4", "mpaa": "R" }`            | Updates an existing movie               |
 | **DELETE** | `/api/movies/{id}`                    | None                                                         | Deletes a movie                         |
 
 ### 📝 Reviews Endpoints
