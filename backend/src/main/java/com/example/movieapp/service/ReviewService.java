@@ -44,4 +44,14 @@ public class ReviewService {
     public List<Review> getReviewsForMovie(int movieId) {
         return reviewRepository.findByMovieId(movieId);
     }
+
+    // ✅ Delete a review by ID
+    public boolean deleteReviewById(int reviewId) {
+        if (reviewRepository.existsById(reviewId)) {
+            reviewRepository.deleteById(reviewId);
+            return true;
+        }
+        return false;
+    }   
+
 }

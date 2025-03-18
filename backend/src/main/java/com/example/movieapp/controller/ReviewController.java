@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/reviews")
+@RequestMapping("/api/reviews")
 @CrossOrigin("*")
 public class ReviewController {
 
@@ -41,5 +41,16 @@ public class ReviewController {
     public ResponseEntity<Review> addReviewByMovieTitle(@PathVariable String title, @RequestBody Review review) {
         Review savedReview = reviewService.addReviewByMovieTitle(title, review);
         return savedReview != null ? ResponseEntity.ok(savedReview) : ResponseEntity.notFound().build();
+    }
+
+    // ✅ Delete a review by ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteReviewById(@PathVariable int id) {
+        boolean deleted = reviewService.deleteReviewById(id);
+        if (deleted) {
+            return ResponseEntity.ok("Review deleted successfully.");
+        } else {
+            return ResponseEntity.status(404).body("Review not found.");
+        }
     }
 }

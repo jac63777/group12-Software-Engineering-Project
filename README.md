@@ -176,8 +176,9 @@ Base URL: `http://localhost:8080`
 |------------|---------------------------------------|--------------------------------------------------------------|-----------------------------------------|
 | **GET**    | `/api/movies/{id}/reviews`           | None                                                         | Fetches all reviews for a movie by ID   |
 | **GET**    | `/api/movies/search/reviews`         | Query params: `?title=Inception`                             | Fetches all reviews for a movie by title |
-| **POST**   | `/api/reviews/addById/{id}`          | `{ "reviewerName": "John", "rating": 5, "comment": "Great movie!" }` | Adds a review for a movie by ID |
-| **POST**   | `/api/reviews/addByTitle/{title}`    | `{ "reviewerName": "John", "rating": 5, "comment": "Great movie!" }` | Adds a review for a movie by title |
+| **POST**   | `/api/reviews/movie/{id}`            | `{ "reviewerName": "John", "rating": 5, "comment": "Great movie!" }` | Adds a review for a movie by ID |
+| **POST**   | `/api/reviews/movie/title/{title}`   | `{ "reviewerName": "John", "rating": 5, "comment": "Great movie!" }` | Adds a review for a movie by title |
+| **DELETE** | `/api/reviews/{id}`                  | None                                                         | Deletes a review for a movie by review ID |
 
 ### 📍 Addresses Endpoints
 | Method     | Endpoint               | Request Body (if needed)  | Description                     |
