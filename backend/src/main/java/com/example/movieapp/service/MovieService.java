@@ -35,56 +35,79 @@ public class MovieService {
                 // If the rating is invalid, keep it null to avoid errors
             }
         }
-        return movieRepository.searchMovies(id, title, genre, cast, director, producer, mpaaEnum);
-    }
-
-    // ✅ Fetch a single movie by ID and load its reviews
-    public Optional<Movie> getMovieById(int movieId) {
-        Optional<Movie> movie = movieRepository.findById(movieId);
-        movie.ifPresent(m -> m.setReviews(reviewRepository.findByMovieId(movieId)));
-        return movie;
-    }
-
-    // ✅ Fetch all movies and load reviews for each movie
-    public List<Movie> getAllMovies() {
-        List<Movie> movies = movieRepository.findAll();
-        movies.forEach(movie -> movie.setReviews(reviewRepository.findByMovieId(movie.getId())));
+        List<Movie> movies = movieRepository.searchMovies(id, title, genre, cast, director, producer, mpaaEnum);
+    
+        // Assign reviews to each movie in the result
+        movies.forEach(this::assignReviewsToMovie);
+    
         return movies;
     }
 
-    // ✅ Search movies by title
+     // Fetch all movies and assign reviews
+    public List<Movie> getAllMovies() {
+        List<Movie> movies = movieRepository.findAll();
+        movies.forEach(this::assignReviewsToMovie);
+        return movies;
+    }
+
+    // Fetch a movie by ID and assign reviews
+    public Optional<Movie> getMovieById(int id) {
+        Optional<Movie> movie = movieRepository.findById(id);
+        movie.ifPresent(this::assignReviewsToMovie);
+        return movie;
+    }
+
+    // Fetch movies by title and assign reviews
     public List<Movie> getMoviesByTitle(String title) {
-        return movieRepository.findByTitleContainingIgnoreCase(title);
+        List<Movie> movies = movieRepository.findByTitleContainingIgnoreCase(title);
+        movies.forEach(this::assignReviewsToMovie);
+        return movies;
     }
 
-    // ✅ Search movies by genre
+    // Fetch movies by genre and assign reviews
     public List<Movie> getMoviesByGenre(String genre) {
-        return movieRepository.findByGenre(genre);
+        List<Movie> movies = movieRepository.findByGenre(genre);
+        movies.forEach(this::assignReviewsToMovie);
+        return movies;
     }
 
-    // ✅ Search movies by cast member
+    // Fetch movies by cast member and assign reviews
     public List<Movie> getMoviesByCast(String cast) {
-        return movieRepository.findByCastContainingIgnoreCase(cast);
+        List<Movie> movies = movieRepository.findByCastContainingIgnoreCase(cast);
+        movies.forEach(this::assignReviewsToMovie);
+        return movies;
     }
 
-    // ✅ Search movies by director
+    // Fetch movies by director and assign reviews
     public List<Movie> getMoviesByDirector(String director) {
-        return movieRepository.findByDirectorContainingIgnoreCase(director);
+        List<Movie> movies = movieRepository.findByDirectorContainingIgnoreCase(director);
+        movies.forEach(this::assignReviewsToMovie);
+        return movies;
     }
 
-    // ✅ Search movies by producer
+    // Fetch movies by producer and assign reviews
     public List<Movie> getMoviesByProducer(String producer) {
-        return movieRepository.findByProducerContainingIgnoreCase(producer);
+        List<Movie> movies = movieRepository.findByProducerContainingIgnoreCase(producer);
+        movies.forEach(this::assignReviewsToMovie);
+        return movies;
     }
 
-    // ✅ Search movies by MPAA rating (Fix: Convert String to Enum)
+    // Fetch movies by MPAA rating and assign reviews
     public List<Movie> getMoviesByRating(String mpaa) {
         try {
             MPAARating ratingEnum = MPAARating.valueOf(mpaa.toUpperCase());
-            return movieRepository.findByMpaa(ratingEnum);
+            List<Movie> movies = movieRepository.findByMpaa(ratingEnum);
+            movies.forEach(this::assignReviewsToMovie);
+            return movies;
         } catch (IllegalArgumentException e) {
             return List.of(); // Return empty list if the rating is invalid
         }
+    }
+
+    // Helper method to assign reviews to a movie
+    private void assignReviewsToMovie(Movie movie) {
+        List<Review> reviews = reviewRepository.findByMovieId(movie.getId());
+        movie.setReviews(reviews);
     }
 
     // ✅ Add a new movie
