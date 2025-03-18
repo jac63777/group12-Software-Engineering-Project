@@ -3,12 +3,13 @@ package com.example.movieapp.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+// Acceptable rating values for movie atrribute mpaa
 public enum MPAARating {
     G("G"), 
     PG("PG"), 
-    PG13("PG-13"), // Changed to PG13 (no hyphen)
+    PG13("PG-13"),
     R("R"), 
-    NC17("NC-17"); // Changed to NC17 (no hyphen)
+    NC17("NC-17");
 
     private final String value;
 

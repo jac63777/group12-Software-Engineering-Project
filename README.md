@@ -81,37 +81,73 @@ backend/
 │   │   │   ├── controller/      (Handles API requests)
 │   │   │   │   ├── MovieController.java  
 │   │   │   │   ├── ReviewController.java  
+│   │   │   │   ├── AddressController.java  
+│   │   │   │   ├── PaymentCardController.java  
+│   │   │   │   ├── CustomerController.java  
 │   │   │   ├── service/         (Contains business logic)
 │   │   │   │   ├── MovieService.java  
 │   │   │   │   ├── ReviewService.java  
+│   │   │   │   ├── AddressService.java  
+│   │   │   │   ├── PaymentCardService.java  
+│   │   │   │   ├── CustomerService.java  
 │   │   │   ├── repository/      (Handles database queries)
 │   │   │   │   ├── MovieRepository.java  
 │   │   │   │   ├── ReviewRepository.java  
+│   │   │   │   ├── AddressRepository.java  
+│   │   │   │   ├── PaymentCardRepository.java  
+│   │   │   │   ├── CustomerRepository.java  
 │   │   │   ├── model/           (Defines entity models)
 │   │   │   │   ├── Movie.java  
 │   │   │   │   ├── Review.java  
+│   │   │   │   ├── Address.java  
 │   │   │   │   ├── MPAARating.java  (Enum for ratings)
+│   │   │   │   ├── PaymentCard.java  
+│   │   │   │   ├── Customer.java  
+│   │   │   │   ├── User.java  
+│   │   │   │   ├── Admin.java  
+│   │   │   │   ├── Status.java  (Enum for customer status)
+│   │   │   ├── util/            (Utility classes)
+│   │   │   │   ├── EncryptionUtil.java  
 │   │   │   ├── MovieappApplication.java    (Main entry point)
 │   │   ├── resources/
 │   │   │   ├── application.properties      (Database & Spring settings)
 │── pom.xml                                  (Project dependencies)
 ```
 
+
 ---
 
 ## Backend Explanation
-| Layer       | File                      | Purpose                        |
-|-------------|---------------------------|--------------------------------|
-| Main        | MovieappApplication.java  | Starts the app                 |
-| Controller  | MovieController.java      | Handles API requests for movies |
-| Controller  | ReviewController.java     | Handles API requests for reviews |
-| Service     | MovieService.java         | Business logic for movies       |
-| Service     | ReviewService.java        | Business logic for reviews      |
-| Repository  | MovieRepository.java      | Database access for movies      |
-| Repository  | ReviewRepository.java     | Database access for reviews     |
-| Model       | Movie.java                | Defines Movie object           |
-| Model       | Review.java               | Defines Review object          |
-| Model       | MPAARating.java           | Enum for MPAA ratings          |
+| Layer       | File                          | Purpose                                  |
+|------------|------------------------------|------------------------------------------|
+| Main       | MovieappApplication.java      | Starts the application                   |
+| Controller | MovieController.java          | Handles API requests for movies          |
+| Controller | ReviewController.java         | Handles API requests for reviews         |
+| Controller | AddressController.java        | Handles API requests for addresses       |
+| Controller | PaymentCardController.java    | Handles API requests for payment cards   |
+| Controller | CustomerController.java       | Handles API requests for customers       |
+| Service    | MovieService.java             | Business logic for movies                |
+| Service    | ReviewService.java            | Business logic for reviews               |
+| Service    | AddressService.java           | Business logic for addresses             |
+| Service    | PaymentCardService.java       | Business logic for payment cards         |
+| Service    | CustomerService.java          | Business logic for customers             |
+| Repository | MovieRepository.java          | Database access for movies               |
+| Repository | ReviewRepository.java         | Database access for reviews              |
+| Repository | AddressRepository.java        | Database access for addresses            |
+| Repository | PaymentCardRepository.java    | Database access for payment cards        |
+| Repository | CustomerRepository.java       | Database access for customers            |
+| Model      | Movie.java                    | Defines `Movie` object                   |
+| Model      | Review.java                   | Defines `Review` object                  |
+| Model      | Address.java                  | Defines `Address` object                 |
+| Model      | MPAARating.java               | Enum for MPAA ratings                    |
+| Model      | PaymentCard.java              | Defines `PaymentCard` object with encryption logic |
+| Model      | Customer.java                 | Defines `Customer` object extending `User` |
+| Model      | User.java                     | Defines `User` base class                |
+| Model      | Admin.java                    | Defines `Admin` as a subtype of `User`   |
+| Model      | Status.java                   | Enum for customer statuses               |
+| Util       | EncryptionUtil.java           | Handles encryption & decryption logic    |
+
+
 
 
 Spring Boot automatically scans these components and connects them.
@@ -121,8 +157,9 @@ Spring Boot automatically scans these components and connects them.
 # API Endpoints & Usage
 Base URL: `http://localhost:8080`
 
-This backend provides REST API endpoints to interact with movies.
+## This backend provides REST API endpoints to interact with movies, reviews, addresses, customers, and payment cards.
 
+### 🎬 Movies Endpoints
 | Method     | Endpoint                              | Request Body (if needed)                                     | Description                             |
 |------------|---------------------------------------|--------------------------------------------------------------|-----------------------------------------|
 | **GET**    | `/api/movies`                         | None                                                         | Fetches all movies                      |
@@ -134,47 +171,39 @@ This backend provides REST API endpoints to interact with movies.
 | **GET**    | `/api/movies/search/producer/{producer}` | None                                                      | Fetches movies by producer              |
 | **GET**    | `/api/movies/search/rating/{mpaa}`    | None                                                         | Fetches movies by MPAA rating           |
 | **GET**    | `/api/movies/search`                  | Query params: `?title=Inception&genre=Action&mpaa=PG-13`     | Flexible search by any combination      |
-| **POST**   | `/api/movies`                         | `{ "title": "Movie", "genre": "Action", "year": 2024 }`      | Adds a new movie                        |
-| **PUT**    | `/api/movies/{id}`                    | `{ "title": "Updated Title", "genre": "Comedy" }`            | Updates an existing movie               |
+| **POST**   | `/api/movies`                         | `{ "title": "Movie", "genre": "Action Epic", "cast": "Actor Names", "director": "Director Names", "producer": "Producer Names", "synopsis": "Brief description of the movie", "picture": "image_path", "video": "youtube link", "mpaa": "PG-13" }`      | Adds a new movie                        |
+| **PUT**    | `/api/movies/{id}`                    | `{ "title": "Updated Movie Title", "genre": "Comedy", "cast": "New Actor Names", "director": "New Directors", "producer": "New Producers", "synopsis": "Updated description", "picture": "image_path", "video": "updated_trailer.mp4", "mpaa": "R" }`            | Updates an existing movie               |
 | **DELETE** | `/api/movies/{id}`                    | None                                                         | Deletes a movie                         |
-| **GET**    | `/api/movies/{id}/reviews`            | None                                                         | Fetches all reviews for a movie by ID   |
-| **GET**    | `/api/movies/search/reviews`          | Query params: `?title=Inception``                            | Fetches all reviews for a movie by title|
-| **GET**    | `/api/movies/search/producers`        | None                                                         | Fetches all unique producers            |
+
+### 📝 Reviews Endpoints
+| Method     | Endpoint                              | Request Body (if needed)                                     | Description                             |
+|------------|---------------------------------------|--------------------------------------------------------------|-----------------------------------------|
+| **GET**    | `/api/movies/{id}/reviews`           | None                                                         | Fetches all reviews for a movie by ID   |
+| **GET**    | `/api/movies/search/reviews`         | Query params: `?title=Inception`                             | Fetches all reviews for a movie by title |
+| **POST**   | `/api/reviews/movie/{id}`            | `{ "reviewerName": "John", "rating": 5, "comment": "Great movie!" }` | Adds a review for a movie by ID |
+| **POST**   | `/api/reviews/movie/title/{title}`   | `{ "reviewerName": "John", "rating": 5, "comment": "Great movie!" }` | Adds a review for a movie by title |
+| **DELETE** | `/api/reviews/{id}`                  | None                                                         | Deletes a review for a movie by review ID |
+
+### 📍 Addresses Endpoints
+| Method     | Endpoint               | Request Body (if needed)  | Description                     |
+|------------|------------------------|---------------------------|---------------------------------|
+| **GET**    | `/api/addresses`        | None                      | Fetches all addresses          |
+
+
+### 💳 Payment Card Endpoints
+| Method     | Endpoint                                      | Request Body (if needed)                                            | Description                                   |
+|------------|---------------------------------------------|-------------------------------------------------------------------|-----------------------------------------------|
+| **GET**    | `/api/payment-cards`                       | None                                                              | Fetches all payment cards                     |
+| **GET**    | `/api/payment-cards/{id}`                  | None                                                              | Fetches a specific payment card by ID         |
+| **GET**    | `/api/payment-cards/customer/{id}`         | None                                                              | Fetches all payment cards for a specific customer ID|
+| **POST**   | `/api/payment-cards/customer/{customerId}` | `{ "decryptedCardNumber": "1234567812345678", "expirationDate": "2026-12-31", "decryptedCvv": "123" }` | Adds a new card using the customer's registered address |
+| **POST**   | `/api/payment-cards/customer/{customerId}/new-address` | `{ "paymentCard": { "decryptedCardNumber": "9876543210987654", "expirationDate": "2025-11-30", "decryptedCvv": "456" }, "billingAddress": { "street": "456 Elm St", "city": "Los Angeles", "state": "CA", "zipCode": "90001", "country": "USA" } }` | Adds a new payment card with a new billing address |
+| **DELETE** | `/api/payment-cards/{id}`                  | None                                                              | Deletes a payment card by ID                  |
+| **GET**    | `/api/payment-cards/{id}/decrypt-card`     | None                                                              | Retrieves the decrypted card number (secure use only) |
+| **GET**    | `/api/payment-cards/{id}/decrypt-cvv`      | None                                                              | Retrieves the decrypted CVV (secure use only) |
+
 
 NOTE, you may search by any combination of MPAA Rating, Title, Genre, Director, Cast. Useful for querying based on multiple parameters.
-
----
-
-## Example API Calls
-
-Note, of course, that the endpoints can always be checked for what they return by putting them into the browser, 
-which will return a page of the JSON or whatever response.
-
-**Response**
-{"message":"Welcome to the Movie API!"}
-
-### Fetch All Movies
-**Request**
-GET http://localhost:8080/api/movies
-
-**Response**
-[ { "title": "Inception", "year": 2010 }, { "title": "Interstellar", "year": 2014 } ] (an array of movies all with the same structure)
-
-### Fetch a Movie by Title
-GET http://localhost:8080/api/movies/title/Inception <br>
-or GET http://localhost:8080/api/movies/search?title=Inception
-
-**Response**
-{ "title": "Inception", "year": 2010 }
-
-### Add a New Movie
-**Request**
-POST http://localhost:8080/api/movies Content-Type: application/json <br>
-**Body**
-{ "title": "The Matrix", "year": 1999 }
-
-**Response**
-{ "title": "The Matrix", "year": 1999 }
 
 ---
 
