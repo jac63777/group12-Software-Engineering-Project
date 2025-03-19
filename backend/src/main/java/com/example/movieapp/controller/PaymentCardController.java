@@ -70,7 +70,7 @@ public class PaymentCardController {
 
 
     @DeleteMapping("/{id}")
-public ResponseEntity<String> deletePaymentCard(@PathVariable int id) {
+public ResponseEntity<?> deletePaymentCard(@PathVariable int id) {
     boolean deleted = paymentCardService.deletePaymentCard(id);
 
     if (deleted) {

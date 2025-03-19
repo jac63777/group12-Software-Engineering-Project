@@ -5,6 +5,7 @@ import com.example.movieapp.model.Customer;
 import com.example.movieapp.model.Address;
 import com.example.movieapp.repository.PaymentCardRepository;
 import com.example.movieapp.controller.PaymentCardController.PaymentCardRequest;
+import org.springframework.transaction.annotation.Transactional;
 import com.example.movieapp.repository.CustomerRepository;
 import com.example.movieapp.repository.AddressRepository;
 import com.example.movieapp.util.EncryptionUtil;
@@ -125,16 +126,26 @@ public class PaymentCardService {
     }
 
 
+    @Transactional
     public boolean deletePaymentCard(int id) {
-    Optional<PaymentCard> existingCard = paymentCardRepository.findById(id);
+        Optional<PaymentCard> existingCard = paymentCardRepository.findById(id);
 
-    if (existingCard.isPresent()) {
-        paymentCardRepository.deleteById(id);
-        return true;
-    } else {
-        return false;
+        if (existingCard.isPresent()) {
+            PaymentCard card = existingCard.get();
+            
+            // Remove the card from the customer's list
+            Customer customer = card.getCustomer();
+            if (customer != null) {
+                customer.getPaymentCards().remove(card);
+                customerRepository.save(customer);
+            }
+
+            paymentCardRepository.delete(card);
+            return true;
+        } else {
+            return false;
+        }
     }
-}
 
     // ✅ Retrieve decrypted card number
     public String getDecryptedCardNumber(int paymentCardId) {

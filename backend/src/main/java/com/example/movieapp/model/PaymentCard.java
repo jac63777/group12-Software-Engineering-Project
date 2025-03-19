@@ -3,6 +3,7 @@ package com.example.movieapp.model;
 import jakarta.persistence.*;
 import com.example.movieapp.util.EncryptionUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import java.time.LocalDate;
 
 @Entity
@@ -15,6 +16,7 @@ public class PaymentCard {
 
     @ManyToOne
     @JoinColumn(name = "customer_id", referencedColumnName = "user_id", nullable = false)
+    @JsonBackReference
     private Customer customer;
 
     @Column(name = "last_four_digits", length = 4, nullable = false)

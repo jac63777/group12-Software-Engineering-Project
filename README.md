@@ -80,18 +80,21 @@ backend/
 │   │   │   │   ├── AddressController.java  
 │   │   │   │   ├── PaymentCardController.java  
 │   │   │   │   ├── CustomerController.java  
+│   │   │   │   ├── AdminController.java  
 │   │   │   ├── service/         (Contains business logic)
 │   │   │   │   ├── MovieService.java  
 │   │   │   │   ├── ReviewService.java  
 │   │   │   │   ├── AddressService.java  
 │   │   │   │   ├── PaymentCardService.java  
 │   │   │   │   ├── CustomerService.java  
+│   │   │   │   ├── AdminService.java  
 │   │   │   ├── repository/      (Handles database queries)
 │   │   │   │   ├── MovieRepository.java  
 │   │   │   │   ├── ReviewRepository.java  
 │   │   │   │   ├── AddressRepository.java  
 │   │   │   │   ├── PaymentCardRepository.java  
 │   │   │   │   ├── CustomerRepository.java  
+│   │   │   │   ├── AdminRepository.java  
 │   │   │   ├── model/           (Defines entity models)
 │   │   │   │   ├── Movie.java  
 │   │   │   │   ├── Review.java  
@@ -102,12 +105,14 @@ backend/
 │   │   │   │   ├── User.java  
 │   │   │   │   ├── Admin.java  
 │   │   │   │   ├── Status.java  (Enum for customer status)
+│   │   │   │   ├── Role.java  (Enum for user roles)
 │   │   │   ├── util/            (Utility classes)
 │   │   │   │   ├── EncryptionUtil.java  
 │   │   │   ├── MovieappApplication.java    (Main entry point)
 │   │   ├── resources/
 │   │   │   ├── application.properties      (Database & Spring settings)
 │── pom.xml                                  (Project dependencies)
+
 
 
 
@@ -122,16 +127,19 @@ backend/
 | Controller | AddressController.java        | Handles API requests for addresses       |
 | Controller | PaymentCardController.java    | Handles API requests for payment cards   |
 | Controller | CustomerController.java       | Handles API requests for customers       |
+| Controller | AdminController.java          | Handles API requests for admins          |
 | Service    | MovieService.java             | Business logic for movies                |
 | Service    | ReviewService.java            | Business logic for reviews               |
 | Service    | AddressService.java           | Business logic for addresses             |
 | Service    | PaymentCardService.java       | Business logic for payment cards         |
 | Service    | CustomerService.java          | Business logic for customers             |
+| Service    | AdminService.java             | Business logic for admins                |
 | Repository | MovieRepository.java          | Database access for movies               |
 | Repository | ReviewRepository.java         | Database access for reviews              |
 | Repository | AddressRepository.java        | Database access for addresses            |
 | Repository | PaymentCardRepository.java    | Database access for payment cards        |
 | Repository | CustomerRepository.java       | Database access for customers            |
+| Repository | AdminRepository.java          | Database access for admins               |
 | Model      | Movie.java                    | Defines `Movie` object                   |
 | Model      | Review.java                   | Defines `Review` object                  |
 | Model      | Address.java                  | Defines `Address` object                 |
@@ -140,6 +148,7 @@ backend/
 | Model      | Customer.java                 | Defines `Customer` object extending `User` |
 | Model      | User.java                     | Defines `User` base class                |
 | Model      | Admin.java                    | Defines `Admin` as a subtype of `User`   |
+| Model      | Role.java                     | Enum for user roles (Admin, Customer)    |
 | Model      | Status.java                   | Enum for customer statuses               |
 | Util       | EncryptionUtil.java           | Handles encryption & decryption logic    |
 
@@ -171,6 +180,12 @@ Base URL: `http://localhost:8080`
 | **PUT**    | `/api/movies/{id}`                    | `{ "title": "Updated Movie Title", "genre": "Comedy", "cast": "New Actor Names", "director": "New Directors", "producer": "New Producers", "synopsis": "Updated description", "picture": "image_path", "video": "updated_trailer.mp4", "mpaa": "R" }`            | Updates an existing movie               |
 | **DELETE** | `/api/movies/{id}`                    | None                                                         | Deletes a movie                         |
 
+For anything that has a request body for movies, all of them are optional meaning you can include or not include them in the request body 
+and then will simply be ignored if not included. It is very important that when setting an MPAA rating that you stick to {G, PG, PG13,
+R, NC17} exactly as shown here as the Enum is very strict about this. You must also make sure when adding multiple cast members, directors,
+and/or producers for any one movie that you list them out under their respective attribute as such "Jacob Cromer, Maria Khambati" where each
+name is separated by a comma and a space ", " as that is how they are passed to create arrays of people to be queried later.
+
 ### 📝 Reviews Endpoints
 | Method     | Endpoint                              | Request Body (if needed)                                     | Description                             |
 |------------|---------------------------------------|--------------------------------------------------------------|-----------------------------------------|
@@ -180,10 +195,18 @@ Base URL: `http://localhost:8080`
 | **POST**   | `/api/reviews/movie/title/{title}`   | `{ "reviewerName": "John", "rating": 5, "comment": "Great movie!" }` | Adds a review for a movie by title |
 | **DELETE** | `/api/reviews/{id}`                  | None                                                         | Deletes a review for a movie by review ID |
 
+The review endpoints are rather self explanatory. None of the three parameters can be left out when creating a review, and rating must be an integer between 1 and 5.
+Whatever movie you want to add a review for, you must make sure you include its title or ID in the URL depending on which endpoint you are using.
+
 ### 📍 Addresses Endpoints
 | Method     | Endpoint               | Request Body (if needed)  | Description                     |
 |------------|------------------------|---------------------------|---------------------------------|
-| **GET**    | `/api/addresses`        | None                      | Fetches all addresses          |
+| **GET**    | `/api/addresses`       | None                      | Fetches all addresses          	|
+| **GET**    | `/api/addresses/{id}`  | None                      | Fetches an address by ID        |
+| **DELETE**    | `/api/addresses/{id}`| None                     | Deletes an address by ID        |
+
+I believe the address IDs are a little unecessary, but they are there should you need them for any reason. These can also be accessed through a GET request on
+a specific customer.
 
 
 ### 💳 Payment Card Endpoints
@@ -198,8 +221,49 @@ Base URL: `http://localhost:8080`
 | **GET**    | `/api/payment-cards/{id}/decrypt-card`     | None                                                              | Retrieves the decrypted card number (secure use only) |
 | **GET**    | `/api/payment-cards/{id}/decrypt-cvv`      | None                                                              | Retrieves the decrypted CVV (secure use only) |
 
+Payment cards can be a little strict as well. Make sure that you keep card numbers at 16 digits and CVVs at 3. They allow for a little more than that actually, but that was just 
+a safety measure. You will receive an error message (not an uncaught error) if you try and insert a card to a customer that already has 3, as that is one of the requirements of the
+project. Again, this will not crash the system, but it will notify you if you try it. Lastly, for the dates we are using a specific library that expects this date format of
+YYYY-MM-DD so please stick to that religiously. States can hold more characters than two but for consistency, let\'s stick to the two-letter representation and just keep all payment
+country values as 'USA'.java
 
-NOTE, you may search by any combination of MPAA Rating, Title, Genre, Director, Cast. Useful for querying based on multiple parameters.
+You can see there are two different POST endpoints here. One allows you to add a card to a customer using their address attribute as the billing address, and the other asks you
+to specify one. Be aware of the slightly different structures of the request bodies for these two endpoints. The cards also manage addresses well by checking to make sure that
+the address doesn\'t already exist in the database. If so, it will just grab its address ID and use that, so no need to worry about that.
+
+### 📝 Customer Endpoints
+| Method     | Endpoint                                      | Request Body (if needed)                                            | Description                                   |
+| **POST**   | /api/customers                                | `{ "firstName": "John", "lastName": "Doe", "email": "john@example.com", "decryptedPassword": "password123", "role" : "ACTIVE", "isSubscriber": true, "address": { "street": "123 Main St", "city": "New York", "state": "NY", "zipCode": "10001", "country": "USA" }`                                           | Creates a new customer                                  |
+| **GET**     | /api/customers                               | None                                            | Fetches all customers                                  | 
+| **GET**     | /api/customers/{id}                          | None                                            | Fetches a customer by ID                               | 
+| **GET**     | /api/customers/email/{email}                 | None                                            | Fetches a customer by email                            |
+| **PUT**     | /api/customers/{id}                          | `{ "firstName": "John", "lastName": "Smith", "decryptedPassword": "newpass", "isSubscriber": false, "status": "INACTIVE", "address": { "street": "456 Elm St", "city": "Los Angeles", "state": "CA", "zipCode": "90001", "country": "USA" } }`                                  | Updates customer details (besides email)               | 
+| **DELETE**  | /api/customers/{id}                          | None                                            | Deletes a customer by ID                               | 
+| **DELETE**  | /api/customers/email/{email}                 | None                                            | Deletes a customer by email                            | 
+
+Customers and admins are likely the most important endpoints here. When creating a customer with a POST request, all of the above attributes and values are completely necessary 
+other than role. Role is defaultly set to ACTIVE if you don\'t specify but will accept (and only accept) {ACTIVE, INACTIVE, SUSPENDED}. Also, don\'t bother trying to
+set status. It is also defaulty set and any attempts to change it will not work. The system also automatically handles
+duplicate email addresses, so if you try and insert a duplicate email (checking admin and customer) it will give you an error response. When updating a customer, all of the attributes, again,
+are unecessary. You can include or leave out any of them you wish to (if you update an address, I would always update the full address) Pulling a customer will give you all of 
+their personal info, an array of payment cards, and some attributes of when they were last updated, when they were created, last login, and last logout as well. You do not ever have
+to update these last four as those are completely managed by the system and just for record keeping. Deleting a customer will also delete all of their payment cards.
+
+### 📝 Admin Endpoints
+
+| Method     | Endpoint                                      | Request Body (if needed)                                            | Description                                   |
+| **POST**   | /api/admins                                   | { "firstName": "Admin", "lastName": "User", "email": "admin@example.com", "decryptedPassword": "securepassword" }                                          | Creates a new admin                                  |
+| **GET**     | /api/admins                                  | None                                            | Fetches all admins                            | 
+| **GET**     | /api/admins/{id}                             | None                                            | Fetches an admin by ID                        |  
+| **GET**     | /api/admins/email/{email}                    | None                                            | Fetches an admin be email                     | 
+| **PUT**     | /api/admins/{id}                             | { "firstName": "Admin", "lastName": "Updated", "decryptedPassword": "newsecurepassword" }                                           | Updates admin details (besides email)                          | 
+| **DELETE**  | /api/admins/{id}                             | None                                            | Deletes an admin by ID                        | 
+| **DELETE**  | /api/admins/email/{email}                    | None                                            | Deletes an admin by email                     | 
+
+
+The admin table is basically the exact same as the customer table with a couple less attributes. The only real reason they exist as separate tables is to not have a bunch
+of null values for admin rows in a user table. The role attribute for customers and admins serves as like a badge for different user types. We will work out logging in/registration
+kinks very soon.
 
 ---
 
