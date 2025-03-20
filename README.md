@@ -81,6 +81,7 @@ backend/
 │   │   │   │   ├── PaymentCardController.java  
 │   │   │   │   ├── CustomerController.java  
 │   │   │   │   ├── AdminController.java  
+│   │   │   │   ├── PromotionController.java  ✅ (Handles promotion API requests)
 │   │   │   ├── service/         (Contains business logic)
 │   │   │   │   ├── MovieService.java  
 │   │   │   │   ├── ReviewService.java  
@@ -88,6 +89,8 @@ backend/
 │   │   │   │   ├── PaymentCardService.java  
 │   │   │   │   ├── CustomerService.java  
 │   │   │   │   ├── AdminService.java  
+│   │   │   │   ├── PromotionService.java  ✅ (Handles promotion logic)
+│   │   │   │   ├── EmailService.java  ✅ (Handles email sending)
 │   │   │   ├── repository/      (Handles database queries)
 │   │   │   │   ├── MovieRepository.java  
 │   │   │   │   ├── ReviewRepository.java  
@@ -95,6 +98,7 @@ backend/
 │   │   │   │   ├── PaymentCardRepository.java  
 │   │   │   │   ├── CustomerRepository.java  
 │   │   │   │   ├── AdminRepository.java  
+│   │   │   │   ├── PromotionRepository.java ✅ (Handles promotion queries)
 │   │   │   ├── model/           (Defines entity models)
 │   │   │   │   ├── Movie.java  
 │   │   │   │   ├── Review.java  
@@ -106,12 +110,17 @@ backend/
 │   │   │   │   ├── Admin.java  
 │   │   │   │   ├── Status.java  (Enum for customer status)
 │   │   │   │   ├── Role.java  (Enum for user roles)
+│   │   │   │   ├── Promotion.java  ✅ (Defines promotions)
 │   │   │   ├── util/            (Utility classes)
 │   │   │   │   ├── EncryptionUtil.java  
+│   │   │   │   ├── VerificationUtil.java ✅ (Handles verification codes)
+│   │   │   │   ├── VerificationCodeStore.java ✅ (Stores verification codes)
+│   │   │   │   ├── PasswordResetCodeStore.java ✅ (Stores password reset codes)
 │   │   │   ├── MovieappApplication.java    (Main entry point)
-│   │   ├── resources/
-│   │   │   ├── application.properties      (Database & Spring settings)
+│   ├── resources/
+│   │   ├── application.properties      (Database & Spring settings)
 │── pom.xml                                  (Project dependencies)
+
 
 
 
@@ -128,29 +137,37 @@ backend/
 | Controller | PaymentCardController.java    | Handles API requests for payment cards   |
 | Controller | CustomerController.java       | Handles API requests for customers       |
 | Controller | AdminController.java          | Handles API requests for admins          |
+| Controller | PromotionController.java      | Handles API requests for promotions      |
 | Service    | MovieService.java             | Business logic for movies                |
 | Service    | ReviewService.java            | Business logic for reviews               |
 | Service    | AddressService.java           | Business logic for addresses             |
 | Service    | PaymentCardService.java       | Business logic for payment cards         |
 | Service    | CustomerService.java          | Business logic for customers             |
 | Service    | AdminService.java             | Business logic for admins                |
+| Service    | PromotionService.java         | Business logic for promotions            |
+| Service    | EmailService.java             | Handles sending emails (verification, promotions, password reset, etc.) |
 | Repository | MovieRepository.java          | Database access for movies               |
 | Repository | ReviewRepository.java         | Database access for reviews              |
 | Repository | AddressRepository.java        | Database access for addresses            |
 | Repository | PaymentCardRepository.java    | Database access for payment cards        |
 | Repository | CustomerRepository.java       | Database access for customers            |
 | Repository | AdminRepository.java          | Database access for admins               |
+| Repository | PromotionRepository.java      | Database access for promotions           |
 | Model      | Movie.java                    | Defines `Movie` object                   |
 | Model      | Review.java                   | Defines `Review` object                  |
 | Model      | Address.java                  | Defines `Address` object                 |
 | Model      | MPAARating.java               | Enum for MPAA ratings                    |
 | Model      | PaymentCard.java              | Defines `PaymentCard` object with encryption logic |
-| Model      | Customer.java                 | Defines `Customer` object extending `User` |
-| Model      | User.java                     | Defines `User` base class                |
-| Model      | Admin.java                    | Defines `Admin` as a subtype of `User`   |
+| Model      | Customer.java                 | Defines `Customer` object                |
+| Model      | Admin.java                    | Defines `Admin` object                   |
 | Model      | Role.java                     | Enum for user roles (Admin, Customer)    |
 | Model      | Status.java                   | Enum for customer statuses               |
+| Model      | Promotion.java                | Defines `Promotion` entity with promo codes, discounts, and expiration dates |
 | Util       | EncryptionUtil.java           | Handles encryption & decryption logic    |
+| Util       | VerificationUtil.java         | Generates verification codes             |
+| Util       | VerificationCodeStore.java    | Stores temporary verification codes      |
+| Util       | PasswordResetCodeStore.java   | Stores temporary password reset codes    |
+
 
 
 
@@ -160,7 +177,11 @@ Spring Boot automatically scans these components and connects them.
 ---
 
 # API Endpoints & Usage
-Base URL: `http://localhost:8080`
+I personally use this software called Postman which allows me to test endpoints by making requests without the frontend. I\'m sure
+the frontend environment you guys use has something built in for this already, but just a suggestion for quick, lightweight testing while that
+works when only the backend is running!
+
+done
 
 ## This backend provides REST API endpoints to interact with movies, reviews, addresses, customers, and payment cards.
 
@@ -205,7 +226,7 @@ Whatever movie you want to add a review for, you must make sure you include its 
 | **GET**    | `/api/addresses/{id}`  | None                      | Fetches an address by ID        |
 | **DELETE**    | `/api/addresses/{id}`| None                     | Deletes an address by ID        |
 
-I believe the address IDs are a little unecessary, but they are there should you need them for any reason. These can also be accessed through a GET request on
+I believe the address endpoints are a little unecessary, but they are there should you need them for any reason. These can also be accessed through a GET request on
 a specific customer.
 
 
@@ -264,6 +285,47 @@ to update these last four as those are completely managed by the system and just
 The admin table is basically the exact same as the customer table with a couple less attributes. The only real reason they exist as separate tables is to not have a bunch
 of null values for admin rows in a user table. The role attribute for customers and admins serves as like a badge for different user types. We will work out logging in/registration
 kinks very soon.
+
+### 🛂 Registration, Verification, and Login/Logout Endpoints
+| Method     | Endpoint                                      | Request Body (if needed)                                            | Description                                   |
+|------------|---------------------------------------------|-------------------------------------------------------------------|-----------------------------------------------|
+| **POST**   | `/api/customers/send-verification`         | `{ "email": "user@example.com" }`                                 | Sends a verification code to the provided email|
+| **POST**   | `/api/customers/verify`                    | `{ "email": "user@example.com", "code": "123456" }`               | Verifies the provided code for the given email |
+| **POST**   | `/api/customers/login`                     | `{ "email": "user@example.com", "password": "SecurePass123!" }`   | Logs in a customer, updates `lastLoggedIn`, activates inactive users, and prevents suspended users from logging in |
+| **POST**   | `/api/customers/logout/{customerId}`       | None                                                              | Logs out the customer and updates `lastLoggedOut` |
+| **POST**   | `/api/customers/forgot-password`           | `{ "email": "user@example.com" }`                                 | Sends a password reset code to the email |
+| **POST**   | `/api/customers/reset-password`            | `{ "email": "user@example.com", "code": "123456", "newPassword": "NewSecurePass456!" }` | Resets the password using the provided reset code |
+| **POST**   | `/api/customers/change-password`           | `{ "email": "user@example.com", "oldPassword": "SecurePass123!", "newPassword": "NewSecurePass456!" }` | Changes the customer\'s password after validating the old password |
+
+The general idea for registering a customer is that you allow them to put in all of their information including an address (which is optional in the POST request for customers too) 
+and then you maintain a JSON variable/object on the front end of that information. Before creating the customer with POST, you will use send-verification and await the verification code
+which is also contained in the response of send-verification just in case. Then you will use the email from the JSON customer variable you created (or pulling from the input fields if 
+they're still up. However you want to do it). And then once you have a successful call to verify, then you can create the customer using POST. Keep in mind that a customer is allowed to
+enter payment cards at registration but you can not POST a customer with payment cards. So you will have to POST the customer, and then POST the payment cards to that customer ID afterwards.
+Logging in really only serves to verify the username and password. Once a customer has a successful call to login, you should then hold on to their email so that you can reference it to GET
+the customer and their information wherever you may need it. Logging in will set any INACTIVE customer to ACTIVE, and will not permit a SUSPENDED customer to log in. Forgot-password and reset-password
+work almost the same as registering. You should allow the customer to say they forgot their password and give you their email to send them a code, and then wait for them to give you back the code
+to use with their email and a new password to reset their password. Then once you have a succesful call to reset-password, they should be able to log in again. Change-password works very similarly,
+except you will want to take in their email, oldpassword, and a newpassword. All error handling and edge cases should be accounted for, but please test them and try to break them to your heart\'s content.
+Logging really only updates the customer\'s lastLoggedOut, but should be called whenever you click log out and bring a user back to the home page. Keep in mind, these api endpoints also exist
+for admins. I am leaving it up to your discretion how you want to handle this as it's not completely necessary, but my suggestion would be to use them for admins too and just make sure that admin logging
+in and out and registering is done on separate admin forms and gatekeeping admin registration behind an admin registration code/password as we have already been doing because the basic POST call
+for an admin will also work for a customer.
+
+### 🎟️ Promotions Endpoints
+| Method     | Endpoint                                      | Request Body (if needed)                                           | Description                                   |
+|------------|---------------------------------------------|-------------------------------------------------------------------|-----------------------------------------------|
+| **POST**   | `/api/promotions`                          | `{ "promoCode": "SAVE10", "description": "Get 10% off all tickets!", "discountPercentage": 10.00, "expirationDate": "2025-12-31" }` | Creates a new promotion and sends an email to all subscribed customers |
+| **GET**    | `/api/promotions/{id}`                     | None                                                              | Fetches a promotion by its ID                 |
+| **PUT**    | `/api/promotions/{id}`                     | `{ "description": "Updated discount for the holidays!", "discountPercentage": 15.00, "expirationDate": "2025-12-31" }` | Updates an existing promotion (excluding the promo code) |
+| **DELETE** | `/api/promotions/{id}`                     | None                                                              | Deletes a promotion by ID                     |
+
+Lastly are the promotions endpoints. These are very simple and I doubt you need them at this point but they are here. Keep in mind that discountPercentage must stay in this
+form between 0.00 and 100.00 explicitly with the decimal places. This value represents the percentage of the discount where 10.00, for example, is 10\% off the entire price.
+Expiration date should also maintain this "YYYY-MM-DD" format as to not introduce any typing errors, and promo code is limited to four characters and that is strictly enforced
+in the backend. Please keep them to four-character strings of upper case letters and numbers for consistency. As well, this will send an email to every user subscribed to promotional emails.
+Please keep in mind that this is hooked up to my email for right now lol. Gmail\'s free SMTP sends limit us to 500 emails a day, which should be more than enough. I am considering
+creating a free gmail account for our project that way it doesn\'t come from jacobcromer@gmail.com and something like CinemaEBookingSystem@gmail.com or something like that.
 
 ---
 
