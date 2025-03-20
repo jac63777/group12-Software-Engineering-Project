@@ -16,6 +16,7 @@ public class AddressController {
 
     private final AddressService addressService;
 
+
     @Autowired
     public AddressController(AddressService addressService) {
         this.addressService = addressService;
@@ -28,7 +29,7 @@ public class AddressController {
         return addressService.getAllAddresses();
     }
 
-     // Get an address by ID
+    // Get an address by ID
     @GetMapping("/{id}")
     public ResponseEntity<Address> getAddressById(@PathVariable int id) {
         Optional<Address> address = addressService.getAddressById(id);
@@ -36,7 +37,7 @@ public class AddressController {
                       .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Delete an address by ID (Only if it's not referenced)
+    // Delete an address by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteAddress(@PathVariable int id) {
         boolean deleted = addressService.deleteAddress(id);

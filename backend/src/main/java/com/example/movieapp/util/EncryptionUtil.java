@@ -47,4 +47,8 @@ public class EncryptionUtil {
             throw new RuntimeException("Error decrypting data", e);
         }
     }
+
+    public static boolean verifyPassword(String inputPassword, String storedHash) {
+        return encrypt(inputPassword).equals(storedHash);
+    }
 }

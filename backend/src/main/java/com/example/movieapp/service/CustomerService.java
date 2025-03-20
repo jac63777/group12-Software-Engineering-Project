@@ -11,6 +11,8 @@ import com.example.movieapp.repository.PaymentCardRepository;
 import com.example.movieapp.repository.AdminRepository;
 import com.example.movieapp.service.PaymentCardService;
 import com.example.movieapp.util.EncryptionUtil;
+import org.springframework.http.ResponseEntity;
+import com.example.movieapp.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.example.movieapp.model.Status;
@@ -26,6 +28,8 @@ public class CustomerService {
 
     @Autowired
     private PaymentCardService paymentCardService;
+    @Autowired 
+    private EmailService emailService;
     @Autowired
     private CustomerRepository customerRepository;
     @Autowired
@@ -123,6 +127,10 @@ public class CustomerService {
         return customer;
     }
 
+    public boolean emailExists(String email) {
+        return customerRepository.findByEmail(email).isPresent();
+    }
+
     public Customer getCustomerById(int id) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer with ID " + id + " not found."));
@@ -174,6 +182,14 @@ public class CustomerService {
 
         customer.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         Customer savedCustomer = customerRepository.save(customer);
+
+        // ✅ Send profile update confirmation email
+        try {
+            emailService.sendProfileUpdateConfirmation(customer.getEmail());
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Profile updated, but unable to send confirmation email.");
+        }
+        
         return savedCustomer;
     }
 
@@ -190,6 +206,30 @@ public class CustomerService {
             throw new RuntimeException("Customer with email " + email + " not found.");
         }
         customerRepository.delete(customer.get());
+    }
+
+    public void saveCustomer(Customer customer) {
+    customerRepository.save(customer);
+    }
+
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        Customer customer = customerRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        // 🔹 Verify old password
+        if (!EncryptionUtil.verifyPassword(oldPassword, customer.getPasswordHash())) {
+            throw new RuntimeException("Incorrect old password");
+        }
+
+        // 🔹 Encrypt and update new password
+        customer.setPasswordHash(EncryptionUtil.encrypt(newPassword));
+        customerRepository.save(customer);
+
+        try {
+            emailService.sendPasswordResetConfirmation(email);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Unable to send email. Check that email address is correct.");
+        }
     }
 
 }

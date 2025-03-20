@@ -6,6 +6,7 @@ import com.example.movieapp.repository.CustomerRepository;
 import com.example.movieapp.util.EncryptionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.example.movieapp.service.EmailService;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -18,6 +19,8 @@ public class AdminService {
     private AdminRepository adminRepository;
     @Autowired 
     private CustomerRepository customerRepository;
+    @Autowired
+    private EmailService emailService;
 
     public Admin createAdmin(Admin admin) {
 
@@ -67,6 +70,10 @@ public class AdminService {
         return admin;
     }
 
+    public boolean emailExists(String email) {
+        return adminRepository.findByEmail(email).isPresent();
+    }
+
     public Admin updateAdmin(int id, Admin updatedAdmin) {
         Admin admin = adminRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Admin with ID " + id + " not found"));
@@ -87,6 +94,14 @@ public class AdminService {
 
         admin.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         Admin savedAdmin = adminRepository.save(admin);
+
+        // ✅ Send profile update confirmation email
+        try {
+            emailService.sendProfileUpdateConfirmation(admin.getEmail());
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Profile updated, but unable to send confirmation email.");
+        }
+
         return savedAdmin;
     }
 
@@ -103,5 +118,29 @@ public class AdminService {
             throw new RuntimeException("Admin with email " + email + " not found");
         }
         adminRepository.delete(admin.get());
+    }
+
+    public void saveAdmin(Admin admin) {
+    adminRepository.save(admin);
+    }
+
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        Admin admin = adminRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Admin not found"));
+
+        // 🔹 Verify old password
+        if (!EncryptionUtil.verifyPassword(oldPassword, admin.getPasswordHash())) {
+            throw new RuntimeException("Incorrect old password");
+        }
+
+        // 🔹 Encrypt and update new password
+        admin.setPasswordHash(EncryptionUtil.encrypt(newPassword));
+        adminRepository.save(admin);
+
+        try {
+            emailService.sendPasswordResetConfirmation(email);
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Unable to send email. Check that email address is correct.");
+        }
     }
 }
