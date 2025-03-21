@@ -28,22 +28,22 @@ public class PaymentCardService {
         this.addressRepository = addressRepository;
     }
 
-    // ✅ Get all payment cards
+    // Get all payment cards
     public List<PaymentCard> getAllPaymentCards() {
         return paymentCardRepository.findAll();
     }
 
-    // ✅ Get a specific payment card by ID
+    // Get payment card by ID
     public Optional<PaymentCard> getPaymentCardById(int id) {
         return paymentCardRepository.findById(id);
     }
 
-    // ✅ Get all payment cards for a specific customer
+    // Get all payment cards for a specific customer
     public List<PaymentCard> getCardsByCustomerId(int customerId) {
         return paymentCardRepository.findByCustomerUserId(customerId);
     }
 
-     // ✅ Add a card using the customer's existing address
+     // Add a card using the customer's existing address
     public PaymentCard addCardUsingCustomerAddress(int customerId, PaymentCard paymentCard) {
         validateCardDetails(paymentCard);
 
@@ -60,24 +60,24 @@ public class PaymentCardService {
         return encryptAndSavePaymentCard(paymentCard);
     }
 
-    // ✅ Add a card with a new billing address
+    // Add a card with a new billing address
     public PaymentCard addCardWithNewAddress(int customerId, PaymentCardRequest request) {
         validateCardDetails(request.getPaymentCard());
 
         // Encrypt card details
         String encryptedCardNumber = EncryptionUtil.encrypt(request.getPaymentCard().getDecryptedCardNumber());
 
-        // ✅ Check if card already exists
+        // Check if card already exists
         Optional<PaymentCard> existingCard = paymentCardRepository.findByEncryptedCardNumber(encryptedCardNumber);
         if (existingCard.isPresent()) {
             throw new IllegalArgumentException("This payment card already exists in the system.");
         }
 
-        // ✅ Fetch Customer
+        // Fetch Customer
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
 
-        // ✅ Check if address already exists
+        // Check if address already exists
         Address newAddress = request.getBillingAddress();
         Optional<Address> existingAddress = addressRepository.findByStreetAndCityAndStateAndZipCodeAndCountry(
                 newAddress.getStreet(),
@@ -93,14 +93,14 @@ public class PaymentCardService {
             newAddress = addressRepository.save(newAddress); // Save only if it doesn't exist
         }
 
-        // ✅ Create and save the payment card
+        // Create and save the payment card
         PaymentCard paymentCard = request.getPaymentCard();
         paymentCard.setCustomer(customer);
         paymentCard.setBillingAddress(newAddress);
         return encryptAndSavePaymentCard(paymentCard);
     }
 
-    // ✅ Encrypt card details, validate uniqueness, and enforce max 3 cards per customer
+    // Encrypt card details, validate uniqueness, and enforce max 3 cards per customer
     private PaymentCard encryptAndSavePaymentCard(PaymentCard paymentCard) {
         String encryptedCardNumber = EncryptionUtil.encrypt(paymentCard.getDecryptedCardNumber());
         String encryptedCvv = EncryptionUtil.encrypt(paymentCard.getDecryptedCvv());
@@ -147,21 +147,21 @@ public class PaymentCardService {
         }
     }
 
-    // ✅ Retrieve decrypted card number
+    // Retrieve decrypted card number
     public String getDecryptedCardNumber(int paymentCardId) {
         return paymentCardRepository.findById(paymentCardId)
                 .map(PaymentCard::getDecryptedCardNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Payment card not found"));
     }
 
-    // ✅ Retrieve decrypted CVV (ONLY when needed for processing)
+    // Retrieve decrypted CVV 
     public String getDecryptedCvv(int paymentCardId) {
         return paymentCardRepository.findById(paymentCardId)
                 .map(PaymentCard::getDecryptedCvv)
                 .orElseThrow(() -> new IllegalArgumentException("Payment card not found"));
     }
 
-    // ✅ Validate card details before processing
+    // Validate card details before processing
     private void validateCardDetails(PaymentCard paymentCard) {
         String cardNumber = paymentCard.getDecryptedCardNumber();
         String cvv = paymentCard.getDecryptedCvv();

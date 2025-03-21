@@ -246,7 +246,7 @@ Payment cards can be a little strict as well. Make sure that you keep card numbe
 a safety measure. You will receive an error message (not an uncaught error) if you try and insert a card to a customer that already has 3, as that is one of the requirements of the
 project. Again, this will not crash the system, but it will notify you if you try it. Lastly, for the dates we are using a specific library that expects this date format of
 YYYY-MM-DD so please stick to that religiously. States can hold more characters than two but for consistency, let\'s stick to the two-letter representation and just keep all payment
-country values as 'USA'.java
+country values as 'USA'
 
 You can see there are two different POST endpoints here. One allows you to add a card to a customer using their address attribute as the billing address, and the other asks you
 to specify one. Be aware of the slightly different structures of the request bodies for these two endpoints. The cards also manage addresses well by checking to make sure that

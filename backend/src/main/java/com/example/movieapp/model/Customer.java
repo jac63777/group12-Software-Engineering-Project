@@ -43,7 +43,7 @@ public class Customer {
 
     @ManyToOne
     @JoinColumn(name = "address_id", referencedColumnName = "address_id", nullable = true)
-    private Address address; // Optional field
+    private Address address; 
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
@@ -88,7 +88,6 @@ public class Customer {
         return true;
     }
 
-    // ✅ Getters & Setters
     public Role getRole() {
         return role;
     }

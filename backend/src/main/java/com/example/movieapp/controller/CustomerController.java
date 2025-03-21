@@ -33,6 +33,7 @@ public class CustomerController {
     @Autowired
     private AdminService adminService;
 
+    // Create new customer
     @PostMapping
     public ResponseEntity<?> createCustomer(@RequestBody Customer customer) {
 
@@ -45,11 +46,13 @@ public class CustomerController {
         }
     }
 
+    // Return all customers
      @GetMapping
     public ResponseEntity<List<Customer>> getAllCustomers() {
         return ResponseEntity.ok(customerService.getAllCustomers());
     }
 
+    // Get a customer by email
     @GetMapping("/email/{email}")
     public ResponseEntity<?> getCustomerByEmail(@PathVariable String email) {
         try {
@@ -60,6 +63,7 @@ public class CustomerController {
         }
     }
 
+    // Get a customer by ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getCustomerById(@PathVariable int id) {
         try {
@@ -70,6 +74,7 @@ public class CustomerController {
         }
     }
 
+    // Update customer information
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCustomer(@PathVariable int id, @RequestBody Customer updatedCustomer) {
         try {
@@ -80,6 +85,7 @@ public class CustomerController {
         }
     }
 
+    // Delete a customer by their ID
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCustomerById(@PathVariable int id) {
         try {
@@ -90,6 +96,7 @@ public class CustomerController {
         }
     }
 
+    // Delete a customer by their email
     @DeleteMapping("/email/{email}")
     public ResponseEntity<?> deleteCustomerByEmail(@PathVariable String email) {
         try {
@@ -100,51 +107,63 @@ public class CustomerController {
         }
     }
 
+    // Send a verification code to a customer
     @PostMapping("/send-verification")
     public ResponseEntity<?> sendVerificationCode(@RequestBody Map<String, String> requestBody) {
         String email = requestBody.get("email");
 
+        // Make sure email is provided
         if (email == null || email.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Email is required"));
         }
 
-        // 🔹 Check if the email is already registered as a Customer or Admin
+        // Make sure email is not already registered
         boolean emailExists = customerService.emailExists(email) || adminService.emailExists(email);
         if (emailExists) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "Email is already in use. Please log in or reset your password."));
         }
 
+        // Generate a temporary verification code
         String code = VerificationUtil.generateVerificationCode();
         verificationCodeStore.storeCode(email, code);
 
         try {
+            // Send verification email
             emailService.sendVerificationEmail(email, code);
         } catch (RuntimeException e) {
+            // Most likely caused by an invalid email address
             return ResponseEntity.status(400).body("{\"error\": \"Unable to send email. Check that email address is correct.\"}");
         }
         
+        // Success
         return ResponseEntity.ok(Map.of(
             "message", "Verification code sent to " + email,
             "verificationCode", code  // Include the code in the response
         ));
     }
 
+    // Verify a customer's code
     @PostMapping("/verify")
     public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> requestBody) {
         String email = requestBody.get("email");
         String code = requestBody.get("code");
 
+        // Make sure both code and email are provided
         if (email == null || code == null) {
             return ResponseEntity.status(400).body("{\"error\": \"Email and verification code are required.\"}");
         }
 
+        // Check that code and email exist in hash table
         if (verificationCodeStore.verifyCode(email, code)) {
+            // Removie the code from storage
             verificationCodeStore.removeCode(email);
 
+            // Send confirmation email
             try {
                 emailService.sendConfirmationEmail(email);
             } catch (RuntimeException e) {
+                // Most likely caused by invalid email address
                 return ResponseEntity.status(400).body("{\"error\": \"Unable to send email. Check that email address is correct.\"}");
             }
 
@@ -154,15 +173,17 @@ public class CustomerController {
         }
     }
 
+    // Customer forgot their password
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> requestBody) {
         String email = requestBody.get("email");
 
+        // Make sure email is provided
         if (email == null || email.isEmpty()) {
             return ResponseEntity.badRequest().body("{\"error\": \"Email is required.\"}");
         }
 
-        // 🔹 Make sure the account exists
+        // Make sure that the email belongs to a customer
         boolean emailExists = customerService.emailExists(email);
         if (!emailExists) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -172,7 +193,7 @@ public class CustomerController {
         try {
             Customer customer = customerService.getCustomerByEmail(email);
 
-            // Generate a 6-digit code
+            // Generate a code
             String resetCode = VerificationUtil.generateVerificationCode();
             
             // Store the code temporarily
@@ -182,6 +203,7 @@ public class CustomerController {
             try {
                 emailService.sendPasswordResetCode(email, resetCode);
             } catch (RuntimeException e) {
+                // Most likely caused by an invalid email
                 return ResponseEntity.status(400).body("{\"error\": \"Unable to send email. Check that email address is correct.\"}");
             }
 
@@ -194,30 +216,37 @@ public class CustomerController {
         }
     }
 
+    // Reset password from verification code
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> requestBody) {
         String email = requestBody.get("email");
         String code = requestBody.get("code");
         String newPassword = requestBody.get("newPassword");
 
+        // Make sure email, code, and new password are provided
         if (email == null || code == null || newPassword == null || newPassword.isEmpty()) {
             return ResponseEntity.badRequest().body("{\"error\": \"Email, code, and new password are required.\"}");
         }
 
+        // Check that the code provided is correct for the email
         if (!PasswordResetCodeStore.verifyCode(email, code)) {
             return ResponseEntity.status(400).body("{\"error\": \"Invalid or expired code.\"}");
         }
 
         try {
+            // Update the customer
             Customer customer = customerService.getCustomerByEmail(email);
             customer.setPasswordHash(EncryptionUtil.encrypt(newPassword)); // Encrypt the new password
             customerService.saveCustomer(customer); // Save the updated password
 
+            // Stop storing temporary code
             PasswordResetCodeStore.removeCode(email); // Remove code after successful reset
 
+            // Send confirmation email
             try {
                 emailService.sendPasswordResetConfirmation(email);
             } catch (RuntimeException e) {
+                // Most likely caused by an invalid email
                 return ResponseEntity.status(400).body("{\"error\": \"Unable to send email. Check that email address is correct.\"}");
             }
 
@@ -227,12 +256,13 @@ public class CustomerController {
         }
     }
 
+    // Customer login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> requestBody) {
         String email = requestBody.get("email");
         String password = requestBody.get("password");
 
-
+        // Make sure email and password are provided
         if (email == null || password == null) {
             return ResponseEntity.status(400).body("{\"error\": \"Email and password are required.\"}");
         }
@@ -240,23 +270,21 @@ public class CustomerController {
         try {
             Customer customer = customerService.getCustomerByEmail(email);
 
-            // 🔹 Deny login if status is SUSPENDED
+            // Don't allow SUSPENDED accounts to login
             if (customer.getStatus() == Status.SUSPENDED) {
                 return ResponseEntity.status(403).body("{\"error\": \"Your account is suspended.\"}");
             }
 
-            // 🔹 Compare entered password with stored password hash
+            // Verify email and password
             if (EncryptionUtil.verifyPassword(password, customer.getPasswordHash())) {
 
-                // 🔹 If the status is INACTIVE, update it to ACTIVE
+                // If the status is INACTIVE, update it to ACTIVE
                 if (customer.getStatus() == Status.INACTIVE) {
                     customer.setStatus(Status.ACTIVE);
                 }
 
-                // 🔹 Update lastLoggedIn timestamp
+                // Update lastLoggedIn
                 customer.setLastLoggedIn(new Timestamp(System.currentTimeMillis()));
-                
-                // ✅ Save the customer directly to ensure changes persist
                 customerService.saveCustomer(customer);
 
                 return ResponseEntity.ok("{\"message\": \"Login successful.\"}");
@@ -268,10 +296,12 @@ public class CustomerController {
         }
     }
 
+    // Customer logout
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestBody Map<String, String> requestBody) {
         String email = requestBody.get("email");
 
+        // Make sure email is provided
         if (email == null) {
             return ResponseEntity.status(400).body("{\"error\": \"Email is required.\"}");
         }
@@ -279,10 +309,8 @@ public class CustomerController {
         try {
             Customer customer = customerService.getCustomerByEmail(email);
 
-            // 🔹 Set lastLoggedOut timestamp to now
+            // Set lastLoggedOut
             customer.setLastLoggedOut(new Timestamp(System.currentTimeMillis()));
-
-            // 🔹 Save the update
             customerService.saveCustomer(customer);
 
             return ResponseEntity.ok("{\"message\": \"Logout successful.\"}");
@@ -291,20 +319,24 @@ public class CustomerController {
         }
     }
 
+    // Change customer password
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestBody Map<String, String> requestBody) {
         String email = requestBody.get("email");
         String oldPassword = requestBody.get("oldPassword");
         String newPassword = requestBody.get("newPassword");
 
+        // Make sure email, old password, and new password provided
         if (email == null || oldPassword == null || newPassword == null || newPassword.isEmpty()) {
             return ResponseEntity.badRequest().body("{\"error\": \"Email, old password, and new password are required.\"}");
         }
 
+        // Send confirmation email
         try {
             customerService.changePassword(email, oldPassword, newPassword);
             return ResponseEntity.ok("{\"message\": \"Password changed successfully.\"}");
         } catch (RuntimeException e) {
+            // Most likely caused by invalid email
             return ResponseEntity.status(400).body("{\"error\": \"" + e.getMessage() + "\"}");
         }
     }
