@@ -2,6 +2,8 @@ package com.example.movieapp.controller;
 
 import com.example.movieapp.model.Customer;
 import com.example.movieapp.model.Status;
+import com.example.movieapp.model.Admin;
+import com.example.movieapp.model.Role;
 import com.example.movieapp.service.CustomerService;
 import com.example.movieapp.service.AdminService;
 import com.example.movieapp.service.EmailService;
@@ -256,43 +258,59 @@ public class CustomerController {
         }
     }
 
-    // Customer login
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> requestBody) {
         String email = requestBody.get("email");
         String password = requestBody.get("password");
 
-        // Make sure email and password are provided
         if (email == null || password == null) {
-            return ResponseEntity.status(400).body("{\"error\": \"Email and password are required.\"}");
+            return ResponseEntity.status(400).body(Map.of("error", "Email and password are required."));
         }
 
+        // Try logging in as Customer
         try {
             Customer customer = customerService.getCustomerByEmail(email);
 
-            // Don't allow SUSPENDED accounts to login
             if (customer.getStatus() == Status.SUSPENDED) {
-                return ResponseEntity.status(403).body("{\"error\": \"Your account is suspended.\"}");
+                return ResponseEntity.status(403).body(Map.of("error", "Your account is suspended."));
             }
 
-            // Verify email and password
             if (EncryptionUtil.verifyPassword(password, customer.getPasswordHash())) {
-
-                // If the status is INACTIVE, update it to ACTIVE
                 if (customer.getStatus() == Status.INACTIVE) {
                     customer.setStatus(Status.ACTIVE);
                 }
 
-                // Update lastLoggedIn
                 customer.setLastLoggedIn(new Timestamp(System.currentTimeMillis()));
                 customerService.saveCustomer(customer);
 
-                return ResponseEntity.ok("{\"message\": \"Login successful.\"}");
+                return ResponseEntity.ok(Map.of(
+                    "message", "Login successful.",
+                    "role", customer.getRole().toString()
+                ));
             } else {
-                return ResponseEntity.status(401).body("{\"error\": \"Invalid credentials.\"}");
+                return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials."));
             }
         } catch (RuntimeException e) {
-            return ResponseEntity.status(404).body("{\"error\": \"Email not found.\"}");
+            // This will happen if the email is not a customer, then it will try to login an admin instead.
+        }
+
+        // Try logging in as Admin
+        try {
+            Admin admin = adminService.getAdminByEmail(email);
+
+            if (EncryptionUtil.verifyPassword(password, admin.getPasswordHash())) {
+                admin.setLastLoggedIn(new Timestamp(System.currentTimeMillis()));
+                adminService.saveAdmin(admin);
+
+                return ResponseEntity.ok(Map.of(
+                    "message", "Login successful.",
+                    "role", admin.getRole().toString()
+                ));
+            } else {
+                return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials."));
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(Map.of("error", "Email not found."));
         }
     }
 

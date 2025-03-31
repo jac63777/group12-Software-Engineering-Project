@@ -5,7 +5,10 @@ import com.example.movieapp.model.Address;
 import com.example.movieapp.service.PaymentCardService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,6 +70,17 @@ public class PaymentCardController {
         }
     }
 
+    // Update payment card by ID
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updatePaymentCard(@PathVariable int id, @RequestBody PaymentCardRequest request) {
+        try {
+            PaymentCard updatedCard = paymentCardService.updatePaymentCard(id, request);
+            return ResponseEntity.ok("Payment card updated successfully.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     // Delete payment card by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePaymentCard(@PathVariable int id) {
@@ -121,4 +135,5 @@ public class PaymentCardController {
             this.billingAddress = billingAddress;
         }
     }
+
 }

@@ -10,6 +10,11 @@ import com.example.movieapp.repository.CustomerRepository;
 import com.example.movieapp.repository.AddressRepository;
 import com.example.movieapp.util.EncryptionUtil;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import java.time.LocalDate;
+
+import java.util.Map;
 import java.util.List;
 import java.util.Optional;
 
@@ -98,6 +103,48 @@ public class PaymentCardService {
         paymentCard.setCustomer(customer);
         paymentCard.setBillingAddress(newAddress);
         return encryptAndSavePaymentCard(paymentCard);
+    }
+
+    // Update payment card by ID
+    public PaymentCard updatePaymentCard(int id, PaymentCardRequest request) {
+        PaymentCard card = paymentCardRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Payment card not found"));
+
+        PaymentCard updatedInfo = request.getPaymentCard();
+
+        if (updatedInfo != null) {
+            if (updatedInfo.getDecryptedCardNumber() != null) {
+                card.setDecryptedCardNumber(updatedInfo.getDecryptedCardNumber());
+            }
+
+            if (updatedInfo.getDecryptedCvv() != null) {
+                card.setDecryptedCvv(updatedInfo.getDecryptedCvv());
+            }
+
+            if (updatedInfo.getExpirationDate() != null) {
+                card.setExpirationDate(updatedInfo.getExpirationDate());
+            }
+        }
+
+        // Handle optional billing address
+        Address newBilling = request.getBillingAddress();
+        if (newBilling != null) {
+            Optional<Address> existingAddress = addressRepository.findByStreetAndCityAndStateAndZipCodeAndCountry(
+                    newBilling.getStreet(),
+                    newBilling.getCity(),
+                    newBilling.getState(),
+                    newBilling.getZipCode(),
+                    newBilling.getCountry()
+            );
+
+            if (existingAddress.isPresent()) {
+                card.setBillingAddress(existingAddress.get());
+            } else {
+                card.setBillingAddress(addressRepository.save(newBilling));
+            }
+        }
+
+        return paymentCardRepository.save(card);
     }
 
     // Encrypt card details, validate uniqueness, and enforce max 3 cards per customer
