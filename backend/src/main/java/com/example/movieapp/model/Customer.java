@@ -38,7 +38,7 @@ public class Customer {
     private Status status = Status.ACTIVE;
 
     @Column(name = "is_subscriber", nullable = false)
-    private boolean isSubscriber;
+    private Boolean isSubscriber;
 
 
     @ManyToOne
@@ -66,7 +66,7 @@ public class Customer {
 
     public Customer() {}
 
-    public Customer(String firstName, String lastName, String email, String decryptedPassword, Status status, boolean isSubscriber, Address address) {
+    public Customer(String firstName, String lastName, String email, String decryptedPassword, Status status, Boolean isSubscriber, Address address) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -154,11 +154,11 @@ public class Customer {
         this.status = status;
     }
 
-    public boolean getIsSubscriber() {
+    public Boolean getIsSubscriber() {
         return isSubscriber;
     }
 
-    public void setIsSubscriber(boolean subscriber) {
+    public void setIsSubscriber(Boolean subscriber) {
         isSubscriber = subscriber;
     }
 

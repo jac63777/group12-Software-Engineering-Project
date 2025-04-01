@@ -162,7 +162,11 @@ public class CustomerService {
         }
         
         if (updatedCustomer.getStatus() != null) {
-        customer.setStatus(updatedCustomer.getStatus());
+            customer.setStatus(updatedCustomer.getStatus());
+        }
+
+        if (updatedCustomer.getIsSubscriber() != null) {
+            customer.setIsSubscriber(updatedCustomer.getIsSubscriber());
         }
 
         if (updatedCustomer.getDecryptedPassword() != null && !updatedCustomer.getDecryptedPassword().trim().isEmpty()) {
