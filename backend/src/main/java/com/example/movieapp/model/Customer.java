@@ -14,6 +14,7 @@ import java.sql.Timestamp;
 public class Customer {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private int userId;
 
